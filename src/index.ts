@@ -1,9 +1,9 @@
-import { task } from 'fp-ts';
+import { io, task } from 'fp-ts';
 import { absurd, constant } from 'fp-ts/function';
 import type { TestAPI } from 'vitest';
 
 export type Test<T = unknown> = {
-  readonly expect: task.Task<T>;
+  readonly expect: task.Task<T> | io.IO<T>;
   readonly toEqual: T;
 };
 
@@ -44,5 +44,7 @@ export const runTests = (tests: Tests, expect: Vi.ExpectStatic, it__: TestAPI<un
         test: { expect: actual, toEqual: expected },
       },
     ]) =>
-      getTesterByType(type, it__)(testName, () => expect(actual()).resolves.toStrictEqual(expected))
+      getTesterByType(type, it__)(testName, () =>
+        expect(Promise.resolve(actual())).resolves.toStrictEqual(expected)
+      )
   );
