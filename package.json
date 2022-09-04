@@ -1,6 +1,7 @@
 {
   "name": "unit-test-ts",
   "version": "0.0.0-semantic-release",
+  "license": "MIT",
   "main": "./dist/unit-test-ts.umd.js",
   "exports": {
     ".": {
