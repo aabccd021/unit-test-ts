@@ -1,0 +1,52 @@
+{
+  "name": "unit-test-ts",
+  "version": "0.0.0-semantic-release",
+  "main": "dist/unit-test-ts.cjs.js",
+  "module": "dist/unit-test-ts.esm.js",
+  "scripts": {
+    "build": "pnpm preconstruct fix && pnpm preconstruct build",
+    "lint": "format-package --check && eslint --max-warnings=0 --ext .ts .",
+    "test": "vitest --coverage"
+  },
+  "eslintConfig": {
+    "extends": [
+      "aabccd021"
+    ]
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
+  },
+  "dependencies": {
+    "fp-ts": "^2.12.3"
+  },
+  "devDependencies": {
+    "@preconstruct/cli": "^2.2.1",
+    "@types/node": "^18.7.14",
+    "@typescript-eslint/eslint-plugin": "^5.36.1",
+    "@typescript-eslint/parser": "^5.36.1",
+    "@vitest/coverage-c8": "^0.22.1",
+    "c8": "^7.12.0",
+    "eslint": "^8.23.0",
+    "eslint-config-aabccd021": "^1.1.0",
+    "eslint-plugin-fp-ts": "^0.3.2",
+    "eslint-plugin-functional": "^4.2.2",
+    "eslint-plugin-only-warn": "^1.0.3",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "format-package": "^7.0.0",
+    "happy-dom": "^6.0.4",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.2",
+    "typescript-language-server": "^1.1.2",
+    "vitest": "^0.22.1"
+  }
+}
