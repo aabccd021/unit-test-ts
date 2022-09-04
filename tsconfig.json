@@ -1,4 +1,6 @@
 {
   "extends": "aabccd021-tsconfig",
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
