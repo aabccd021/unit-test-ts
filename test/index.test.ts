@@ -1,4 +1,5 @@
 import { task } from 'fp-ts';
+import { expect, it } from 'vitest';
 
 import { fail, pass, runTests, skip, Tests } from '../src';
 
@@ -17,4 +18,4 @@ const tests: Tests = {
   }),
 };
 
-runTests(tests);
+runTests(tests, expect, it);

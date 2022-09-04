@@ -1,6 +1,6 @@
 import { task } from 'fp-ts';
 import { absurd, constant } from 'fp-ts/function';
-import { expect as expect_, it as it__ } from 'vitest';
+import type { TestAPI } from 'vitest';
 
 export type Test<T = unknown> = {
   readonly expect: task.Task<T>;
@@ -26,16 +26,16 @@ export const skip = testWithType('skip');
 
 export type Tests = Record<string, WrappedTest>;
 
-const getTesterByType = (type: TestType) =>
+const getTesterByType = (type: TestType, it: TestAPI<unknown>) =>
   type === 'pass'
-    ? (name: string, t: task.Task<void>) => constant(it__(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it(name, t))
     : type === 'fail'
-    ? (name: string, t: task.Task<void>) => constant(it__.fails(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it.fails(name, t))
     : type === 'skip'
-    ? (name: string, t: task.Task<void>) => constant(it__.skip(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it.skip(name, t))
     : absurd<never>(type);
 
-export const runTests = (tests: Tests) =>
+export const runTests = (tests: Tests, expect: Vi.ExpectStatic, it__: TestAPI<unknown>) =>
   Object.entries(tests).map(
     ([
       testName,
@@ -43,5 +43,6 @@ export const runTests = (tests: Tests) =>
         type,
         test: { expect: actual, toEqual: expected },
       },
-    ]) => getTesterByType(type)(testName, () => expect_(actual()).resolves.toStrictEqual(expected))
+    ]) =>
+      getTesterByType(type, it__)(testName, () => expect(actual()).resolves.toStrictEqual(expected))
   );

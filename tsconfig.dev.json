@@ -1,5 +1,9 @@
 {
+  "compilerOptions": {
+    "esModuleInterop": true
+  },
   "include": [
-    "test"
+    "test", 
+    "vite.config.ts"
   ]
 }
