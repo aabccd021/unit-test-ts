@@ -1,30 +1,30 @@
 import { io, task } from 'fp-ts';
 import * as vitest from 'vitest';
 
-import { executeTests, itExpect, itExpectFail, itSkipExpect, Tests } from '../src';
+import { executeTests, expect, expectFail, skip, Tests } from '../src';
 
 const tests: Tests = {
-  'task pass': itExpect({
+  'task pass': expect({
     task: task.of('foo'),
     toEqual: 'foo',
   }),
-  'task fail': itExpectFail({
+  'task fail': expectFail({
     task: task.of('foo'),
     toEqual: 'bar',
   }),
-  'task skip': itSkipExpect({
+  'task skip': skip({
     task: task.of('foo'),
     toEqual: 'bar',
   }),
-  'io pass': itExpect({
+  'io pass': expect({
     io: io.of('foo'),
     toEqual: 'foo',
   }),
-  'io fail': itExpectFail({
+  'io fail': expectFail({
     io: io.of('foo'),
     toEqual: 'bar',
   }),
-  'io skip': itSkipExpect({
+  'io skip': skip({
     io: io.of('foo'),
     toEqual: 'bar',
   }),
