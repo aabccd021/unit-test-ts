@@ -1,11 +1,19 @@
-import { io, task } from 'fp-ts';
-import { absurd, constant } from 'fp-ts/function';
+import { io, record, task } from 'fp-ts';
+import { absurd, constant, pipe } from 'fp-ts/function';
+import * as std from 'fp-ts-std';
 import type { TestAPI } from 'vitest';
 
-export type Test<T = unknown> = {
-  readonly expect: task.Task<T> | io.IO<T>;
+export type IOTest<T = unknown> = {
+  readonly expectIO: io.IO<T>;
   readonly toEqual: T;
 };
+
+export type TaskTest<T = unknown> = {
+  readonly expectTask: task.Task<T> | io.IO<T>;
+  readonly toEqual: T;
+};
+
+export type Test<T = unknown> = TaskTest<T> | IOTest<T>;
 
 export type TestType = 'pass' | 'fail' | 'skip';
 
@@ -18,33 +26,35 @@ const testWithType =
   (type: TestType) =>
   <T>(test: Test<T>): WrappedTest<T> => ({ type, test });
 
-export const pass = testWithType('pass');
+export const it = testWithType('pass');
 
-export const fail = testWithType('fail');
+export const itFail = testWithType('fail');
 
-export const skip = testWithType('skip');
+export const itSkip = testWithType('skip');
 
 export type Tests = Record<string, WrappedTest>;
 
-const getTesterByType = (type: TestType, it: TestAPI<unknown>) =>
+const getTesterByType = (type: TestType, it_: TestAPI<unknown>) =>
   type === 'pass'
-    ? (name: string, t: task.Task<void>) => constant(it(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it_(name, t))
     : type === 'fail'
-    ? (name: string, t: task.Task<void>) => constant(it.fails(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it_.fails(name, t))
     : type === 'skip'
-    ? (name: string, t: task.Task<void>) => constant(it.skip(name, t))
+    ? (name: string, t: task.Task<void>) => constant(it_.skip(name, t))
     : absurd<never>(type);
 
-export const runTests = (tests: Tests, expect: Vi.ExpectStatic, it__: TestAPI<unknown>) =>
-  Object.entries(tests).map(
-    ([
-      testName,
-      {
-        type,
-        test: { expect: actual, toEqual: expected },
-      },
-    ]) =>
-      getTesterByType(type, it__)(testName, () =>
-        expect(Promise.resolve(actual())).resolves.toStrictEqual(expected)
-      )
+const getExpectByType = (test: Test, expect: Vi.ExpectStatic) =>
+  'expectTask' in test
+    ? expect(test.expectTask()).resolves.toStrictEqual(test.toEqual)
+    : 'expectIO' in test
+    ? Promise.resolve(expect(test.expectIO()).toStrictEqual(test.toEqual))
+    : absurd<never>(test);
+
+export const runTests = (tests: Tests, vitest: typeof import('vitest')) =>
+  pipe(
+    tests,
+    record.traverseWithIndex(io.Applicative)((testName, { type, test }) =>
+      getTesterByType(type, vitest.it)(testName, () => getExpectByType(test, vitest.expect))
+    ),
+    std.io.execute
   );
