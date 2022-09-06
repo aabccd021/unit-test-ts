@@ -18,9 +18,7 @@
     "test": "vitest"
   },
   "eslintConfig": {
-    "extends": [
-      "aabccd021"
-    ]
+    "extends": "aabccd021"
   },
   "release": {
     "branches": [
