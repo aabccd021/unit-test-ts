@@ -8,7 +8,9 @@
     "require": "./dist/unit-test-ts.umd.js"
   },
   "module": "./dist/unit-test-ts.mjs",
-  "files": "dist",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly",
     "fix": "format-package --write && eslint --max-warnings=0 --ext .ts . --fix",
