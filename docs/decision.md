@@ -22,7 +22,7 @@ const tests = [
 
 ## Accepted: Proposal B
 Reason: 
-- In proposal A, tests may lost when get merged.
+- In proposal A, tests may lost when merged with another tests.
   Only smart people will notice this.
 ```typescript
 const testsA = {
