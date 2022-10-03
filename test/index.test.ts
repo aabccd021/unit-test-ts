@@ -1,7 +1,7 @@
 import { io, task } from 'fp-ts';
 import * as vitest from 'vitest';
 
-import { executeTests, expect, expectFail, skip, Tests } from '../src';
+import { execTests, expect, expectFail, skip, Tests } from '../src';
 
 const tests: Tests = {
   'task pass': expect({
@@ -30,4 +30,4 @@ const tests: Tests = {
   }),
 };
 
-executeTests(tests, vitest);
+execTests(tests, vitest);

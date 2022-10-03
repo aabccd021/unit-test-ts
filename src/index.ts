@@ -1,4 +1,5 @@
-import { io, record, task } from 'fp-ts';
+/* eslint-disable no-use-before-define */
+import { applicative, io, readonlyArray, record, task, void as void_ } from 'fp-ts';
 import { absurd, constant, pipe } from 'fp-ts/function';
 import * as std from 'fp-ts-std';
 
@@ -16,16 +17,28 @@ export type Test<T = unknown> = TaskTest<T> | IOTest<T>;
 
 export type TestType = 'pass' | 'fail' | 'skip';
 
-type WrappedTest<T = unknown> = {
+export type SingleTest<T = unknown> = {
   readonly type: TestType;
   readonly test: Test<T>;
 };
 
-export type Tests = Record<string, WrappedTest>;
+export type SequentialTest = {
+  readonly type: 'sequential';
+  readonly tests: readonly SingleTest[];
+};
+
+export const sequential = (tests: readonly SingleTest[]): SequentialTest => ({
+  type: 'sequential',
+  tests,
+});
+
+export type Testable = SequentialTest | SingleTest;
+
+export type Tests = Record<string, Testable>;
 
 const testWithType =
   (type: TestType) =>
-  <T>(test: Test<T>): WrappedTest<T> => ({ type, test });
+  <T>(test: Test<T>): SingleTest<T> => ({ type, test });
 
 export const expect = testWithType('pass');
 
@@ -35,27 +48,47 @@ export const skip = testWithType('skip');
 
 export type Vitest = typeof import('vitest');
 
-const getItByType = (type: TestType, vitest: Vitest) =>
-  type === 'pass'
-    ? (name: string, t: task.Task<void>) => constant(vitest.it(name, t))
-    : type === 'fail'
-    ? (name: string, t: task.Task<void>) => constant(vitest.it.fails(name, t))
-    : type === 'skip'
-    ? (name: string, t: task.Task<void>) => constant(vitest.it.skip(name, t))
-    : absurd<never>(type);
+const mapSequentialTestsWithIndex = readonlyArray.foldMapWithIndex(
+  applicative.getApplicativeMonoid(io.Applicative)(void_.Monoid)
+);
 
-const getExpectByType = (test: Test, vitest: Vitest) =>
-  'task' in test
-    ? vitest.expect(test.task()).resolves.toStrictEqual(test.toEqual)
-    : 'io' in test
-    ? Promise.resolve(vitest.expect(test.io()).toStrictEqual(test.toEqual))
-    : absurd<never>(test);
+const lazySingleTest = (name: string, test: Testable, vitest: Vitest): io.IO<unknown> =>
+  constant(
+    test.type === 'pass'
+      ? vitest.it(name, lazyExpect(test, vitest))
+      : test.type === 'fail'
+      ? vitest.it.fails(name, lazyExpect(test, vitest))
+      : test.type === 'skip'
+      ? vitest.it.skip(name, lazyExpect(test, vitest))
+      : test.type === 'sequential'
+      ? vitest.describe(
+          name,
+          pipe(
+            test.tests,
+            mapSequentialTestsWithIndex((testIndex, seqTest) =>
+              lazySingleTest(testIndex.toString(), seqTest, vitest)
+            )
+          )
+        )
+      : absurd<never>(test.type)
+  );
 
-export const executeTests = (tests: Tests, vitest: Vitest) =>
+const lazyExpect =
+  ({ test }: SingleTest, vitest: Vitest): task.Task<void> | io.IO<void> =>
+  () =>
+    'task' in test
+      ? vitest.expect(test.task()).resolves.toStrictEqual(test.toEqual)
+      : 'io' in test
+      ? vitest.expect(test.io()).toStrictEqual(test.toEqual)
+      : absurd<never>(test);
+
+const mapTestsWithIndex = record.traverseWithIndex(io.Applicative);
+
+export const lazyTests = (tests: Tests, vitest: Vitest) =>
   pipe(
     tests,
-    record.traverseWithIndex(io.Applicative)((testName, { type, test }) =>
-      getItByType(type, vitest)(testName, () => getExpectByType(test, vitest))
-    ),
-    std.io.execute
+    mapTestsWithIndex((name, test) => lazySingleTest(name, test, vitest))
   );
+
+export const execTests = (tests: Tests, vitest: Vitest) =>
+  pipe(lazyTests(tests, vitest), std.io.execute);
