@@ -1,7 +1,7 @@
 import { io, task } from 'fp-ts';
 import { pipe } from 'fp-ts/function';
 
-import { behavior, expect, filter, sequential } from '../src';
+import { behavior, expect, filter, sequentially } from '../src';
 
 const allBehaviors = [
   behavior(
@@ -30,7 +30,7 @@ const allBehaviors = [
 
   behavior(
     'unit-test-ts can do assert multiple values non concurrently',
-    sequential([
+    sequentially([
       expect({
         task: task.of(1),
         resolvesTo: 1,
@@ -44,7 +44,7 @@ const allBehaviors = [
 
   behavior(
     'unit-test-ts can mark todo failing sequential test',
-    sequential([
+    sequentially([
       expect({
         task: task.of(1),
         resolvesTo: 2,

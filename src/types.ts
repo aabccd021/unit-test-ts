@@ -51,7 +51,7 @@ export const expect = <T>(assertion: SingleAssert<T>): AsyncableSingleAssert => 
   assertion,
 });
 
-export const sequential = (assertion: SequentialAssert): TaggedSequentialAssert => ({
+export const sequentially = (assertion: SequentialAssert): TaggedSequentialAssert => ({
   type: 'sequential',
   todo: false,
   assertion,
