@@ -3,7 +3,7 @@ import * as std from 'fp-ts-std';
 import * as vitest from 'vitest';
 
 import { runVitest } from '../src';
-import { behaviors } from './common';
+import { behaviors } from './tests';
 
 const main = pipe(behaviors, runVitest(vitest));
 
