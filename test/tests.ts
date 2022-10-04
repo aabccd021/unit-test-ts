@@ -41,6 +41,20 @@ const allBehaviors = [
       }),
     ])
   ),
+
+  behavior(
+    'unit-test-ts can mark todo failing sequential test',
+    sequential([
+      expect({
+        task: task.of(1),
+        resolvesTo: 2,
+      }),
+      expect({
+        io: io.of('baz'),
+        resolvesTo: 'bak',
+      }),
+    ])
+  ),
 ];
 
 export const behaviors = pipe(
@@ -50,5 +64,6 @@ export const behaviors = pipe(
     'unit-test-ts can assert resolved result of an IO': 'done',
     'unit-test-ts can mark todo failing test': 'todo',
     'unit-test-ts can do assert multiple values non concurrently': 'done',
+    'unit-test-ts can mark todo failing sequential test': 'todo',
   })
 );
