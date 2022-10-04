@@ -1,7 +1,7 @@
 import { identity, readonlyArray, readonlyRecord, string } from 'fp-ts';
 import { pipe } from 'fp-ts/function';
 
-import { Behavior } from './types';
+import { Behavior, Hook, Test } from './types';
 
 export const filter =
   <N extends string>(names: { readonly [K in N]: 'done' | 'todo' }) =>
@@ -24,3 +24,10 @@ export const filter =
         )
       )
     );
+
+export const mkTest =
+  ({ hook }: { readonly hook: Hook }) =>
+  (behaviors: readonly Behavior[]): Test => ({
+    hook,
+    behaviors,
+  });

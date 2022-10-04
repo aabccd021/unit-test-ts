@@ -1,9 +1,9 @@
 import { io, task } from 'fp-ts';
 import { pipe } from 'fp-ts/function';
 
-import { behavior, expect, filter, sequentially } from '../src';
+import { behavior, expect, filter, mkTest, sequentially } from '../src';
 
-const allBehaviors = [
+const behaviors = [
   behavior(
     'unit-test-ts can assert resolved result of a Task',
     expect({
@@ -57,13 +57,18 @@ const allBehaviors = [
   ),
 ];
 
-export const behaviors = pipe(
-  allBehaviors,
+export const test = pipe(
+  behaviors,
   filter({
     'unit-test-ts can assert resolved result of a Task': 'done',
     'unit-test-ts can assert resolved result of an IO': 'done',
     'unit-test-ts can mark todo failing test': 'todo',
     'unit-test-ts can do assert multiple values non concurrently': 'done',
     'unit-test-ts can mark todo failing sequential test': 'todo',
+  }),
+  mkTest({
+    hook: {
+      beforeEach: task.of(task.of(42)),
+    },
   })
 );

@@ -1,7 +1,7 @@
 import { io, readonlyArray } from 'fp-ts';
 import { absurd, pipe } from 'fp-ts/function';
 
-import { AsyncableSingleAssert, Behavior, SingleAssert } from '.';
+import { AsyncableSingleAssert, Behavior, SingleAssert, Test } from '.';
 import { mapSequentialTestsWithIndex } from './utils';
 
 export type Vitest = typeof import('vitest');
@@ -31,7 +31,8 @@ const getSyncVitestTest = (
 ): ((name: string, f: () => unknown) => unknown) => (todo ? vitest.test.fails : vitest.test);
 
 const runBehavior =
-  ({ name, assertion }: Behavior, vitest: Vitest) =>
+  (vitest: Vitest) =>
+  ({ name, assertion }: Behavior) =>
   () =>
     assertion.type === 'single'
       ? getAsyncableVitestTest(assertion, vitest)(name, runExpect(assertion.assertion, vitest))
@@ -51,8 +52,13 @@ const runBehavior =
         )
       : absurd<never>(assertion);
 
-export const runVitest = (vitest: Vitest) => (behaviors: readonly Behavior[]) =>
-  pipe(
-    behaviors,
-    readonlyArray.traverse(io.Applicative)((behavior) => runBehavior(behavior, vitest))
-  );
+export const runVitest =
+  (vitest: Vitest) =>
+  ({ hook, behaviors }: Test) =>
+    pipe(
+      io.Do,
+      io.chainFirst((_) => (): unknown => vitest.beforeEach(hook.beforeEach)),
+      io.chainFirst((_) =>
+        pipe(behaviors, readonlyArray.traverse(io.Applicative)(runBehavior(vitest)))
+      )
+    );

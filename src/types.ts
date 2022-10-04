@@ -72,3 +72,12 @@ export const behavior = <N extends string>(name: N, assertion: TaggedAssert): Be
 export type NameOf<T> = T extends Behavior<infer N> ? N : never;
 
 export type NamesOf<TS> = TS extends readonly Behavior<infer N>[] ? N : never;
+
+export type Hook = {
+  readonly beforeEach: task.Task<task.Task<unknown>>;
+};
+
+export type Test = {
+  readonly behaviors: readonly Behavior[];
+  readonly hook: Hook;
+};
