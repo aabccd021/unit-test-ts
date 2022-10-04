@@ -32,9 +32,7 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "fp-ts": "^2.12.3",
-    "fp-ts-std": "^0.14.2",
-    "monocle-ts": "^2.3.13",
-    "newtype-ts": "^0.3.5"
+    "fp-ts-std": "^0.14.2"
   },
   "devDependencies": {
     "@types/node": "^18.7.14",
