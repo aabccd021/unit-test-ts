@@ -13,7 +13,7 @@ const runExpect = (assertion: SingleAssert, vitest: Vitest) => () =>
     ? vitest.expect(assertion.io()).toStrictEqual(assertion.resolvesTo)
     : absurd<never>(assertion);
 
-const getVitestTest = (
+const getAsyncableVitestTest = (
   assertion: AsyncableSingleAssert,
   vitest: Vitest
 ): ((name: string, f: () => unknown) => unknown) =>
@@ -25,11 +25,16 @@ const getVitestTest = (
     ? vitest.test.fails
     : vitest.test;
 
+const getSyncVitestTest = (
+  todo: boolean,
+  vitest: Vitest
+): ((name: string, f: () => unknown) => unknown) => (todo ? vitest.test.fails : vitest.test);
+
 const runBehavior =
   ({ name, assertion }: Behavior, vitest: Vitest) =>
   () =>
     assertion.type === 'single'
-      ? getVitestTest(assertion, vitest)(name, runExpect(assertion.assertion, vitest))
+      ? getAsyncableVitestTest(assertion, vitest)(name, runExpect(assertion.assertion, vitest))
       : assertion.type === 'sequential'
       ? vitest.describe(
           name,
@@ -37,7 +42,10 @@ const runBehavior =
             assertion.assertion,
             mapSequentialTestsWithIndex(
               (seqTestIdx, seqTest) => (): unknown =>
-                vitest.test(seqTestIdx.toString(), runExpect(seqTest.assertion, vitest))
+                getSyncVitestTest(assertion.todo, vitest)(
+                  seqTestIdx.toString(),
+                  runExpect(seqTest.assertion, vitest)
+                )
             )
           )
         )
