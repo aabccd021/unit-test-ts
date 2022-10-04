@@ -1,46 +1,40 @@
-import { io, task } from 'fp-ts';
+import { io, readonlyArray } from 'fp-ts';
 import { absurd, pipe } from 'fp-ts/function';
-import * as std from 'fp-ts-std';
 
-import { SingleTest, SingleTest, Tests } from '.';
-import { mapSequentialTestsWithIndex, mapTestsWithIndex } from './utils';
+import { Behavior, SingleAssert } from '.';
+import { mapSequentialTestsWithIndex } from './utils';
 
 export type Vitest = typeof import('vitest');
 
-const expectIO =
-  ({ test }: SingleTest, vitest: Vitest): task.Task<void> | io.IO<void> =>
-  () =>
-    'task' in test
-      ? vitest.expect(test.task()).resolves.toStrictEqual(test.toEqual)
-      : 'io' in test
-      ? vitest.expect(test.io()).toStrictEqual(test.toEqual)
-      : absurd<never>(test);
+const runExpect = (assertion: SingleAssert, vitest: Vitest) => () =>
+  'task' in assertion
+    ? vitest.expect(assertion.task()).resolves.toStrictEqual(assertion.resolvesTo)
+    : 'io' in assertion
+    ? vitest.expect(assertion.io()).toStrictEqual(assertion.resolvesTo)
+    : absurd<never>(assertion);
 
-const testIO =
-  (name: string, test: SingleTest, vitest: Vitest): io.IO<unknown> =>
+const runBehavior =
+  ({ name, assertion }: Behavior, vitest: Vitest) =>
   () =>
-    test.type === 'pass'
-      ? vitest.it(name, expectIO(test, vitest))
-      : test.type === 'fail'
-      ? vitest.it.fails(name, expectIO(test, vitest))
-      : test.type === 'skip'
-      ? vitest.it.skip(name, expectIO(test, vitest))
-      : test.type === 'sequential'
+    assertion.type === 'single'
+      ? assertion.concurrent
+        ? vitest.test.concurrent(name, runExpect(assertion.assertion, vitest))
+        : vitest.test(name, runExpect(assertion.assertion, vitest))
+      : assertion.type === 'sequential'
       ? vitest.describe(
           name,
           pipe(
-            test.tests,
-            mapSequentialTestsWithIndex((seqTestIdx, seqTest) =>
-              testIO(seqTestIdx.toString(), seqTest, vitest)
+            assertion.assertion,
+            mapSequentialTestsWithIndex(
+              (seqTestIdx, seqTest) => (): unknown =>
+                vitest.test(seqTestIdx.toString(), runExpect(seqTest.assertion, vitest))
             )
           )
         )
-      : absurd<never>(test.type);
+      : absurd<never>(assertion);
 
-export const testsIO = (tests: Tests, vitest: Vitest) =>
+export const runVitest = (vitest: Vitest) => (behaviors: readonly Behavior[]) =>
   pipe(
-    tests,
-    mapTestsWithIndex((name, test) => testIO(name, test, vitest))
+    behaviors,
+    readonlyArray.traverse(io.Applicative)((behavior) => runBehavior(behavior, vitest))
   );
-
-export const exec = (tests: Tests, vitest: Vitest) => pipe(testsIO(tests, vitest), std.io.execute);

@@ -55,7 +55,7 @@ export const sequential = (assertion: SequentialAssert): TaggedSequentialAssert 
 
 export type TaggedAssert = AsyncableSingleAssert | TaggedSequentialAssert;
 
-export type Behavior<N extends string> = {
+export type Behavior<N extends string = string> = {
   readonly name: N;
   readonly assertion: TaggedAssert;
 };
