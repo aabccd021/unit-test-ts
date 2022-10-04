@@ -24,6 +24,7 @@ export type SingleAssert<T = unknown> =
 export type AsyncableSingleAssert = {
   readonly type: 'single';
   readonly concurrent: boolean;
+  readonly todo: boolean;
   readonly assertion: SingleAssert;
 };
 
@@ -39,17 +40,20 @@ export type SequentialAssert = ReadonlyArray<SyncTaggedSingleAssert> & {
 
 export type TaggedSequentialAssert = {
   readonly type: 'sequential';
+  readonly todo: boolean;
   readonly assertion: SequentialAssert;
 };
 
 export const expect = <T>(assertion: SingleAssert<T>): AsyncableSingleAssert => ({
   type: 'single',
   concurrent: true,
+  todo: false,
   assertion,
 });
 
 export const sequential = (assertion: SequentialAssert): TaggedSequentialAssert => ({
   type: 'sequential',
+  todo: false,
   assertion,
 });
 
